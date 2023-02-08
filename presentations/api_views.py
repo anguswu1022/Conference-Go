@@ -36,10 +36,11 @@ def api_list_presentations(request, conference_id):
         ]
     }
     """
-    presentations = Presentation.objects.all()
+    presentations = Presentation.objects.filter(conference=conference_id)
     return JsonResponse(
-        {"presentations": presentations},
+        presentations,
         encoder=PresentationListEncoder,
+        safe=False,
     )
 
 

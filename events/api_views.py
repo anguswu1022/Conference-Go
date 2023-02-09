@@ -3,6 +3,7 @@ from common.json import ModelEncoder
 from .models import Conference, Location, State
 from django.views.decorators.http import require_http_methods
 import json
+from .acls import get_photo, get_weather_data
 
 
 class ConferenceListEncoder(ModelEncoder):
@@ -10,6 +11,21 @@ class ConferenceListEncoder(ModelEncoder):
     properties = [
         "name",
     ]
+
+
+class LocationDetailEncoder(ModelEncoder):
+    model = Location
+    properties = [
+        "name",
+        "city",
+        "room_count",
+        "created",
+        "updated",
+        "picture_url",
+    ]
+
+    def get_extra_data(self, o):
+        return {"state": o.state.abbreviation}
 
 
 @require_http_methods(["GET", "POST"])
@@ -110,8 +126,14 @@ def api_show_conference(request, id):
     """
     if request.method == "GET":
         conference = Conference.objects.get(id=id)
+        # Use the city and state abbreviation of the Conference's Location
+        # to call the get_weather_data ACL function and get back a dictionary
+        # that contains the weather data
+        weather = get_weather_data(conference.location.city,
+                                   conference.location.state.abbreviation)
+        # Include the weather data in the JsonResponse
         return JsonResponse(
-            conference,
+            {"conference": conference, "weather": weather},
             encoder=ConferenceDetailEncoder,
             safe=False,
         )
@@ -176,26 +198,19 @@ def api_list_locations(request):
                 {"message": "Invalid state abbreviation"},
                 status=400,
             )
+
+        # Use the city and state's abbreviation in the content dictionary
+        # to call the get_photo ACL function
+        photo_url = get_photo(content["city"], content["state"].abbreviation)
+        # Use the returned dictionary to update the content dictionary
+        content.update(photo_url)
+
         location = Location.objects.create(**content)
         return JsonResponse(
             location,
             encoder=LocationDetailEncoder,
             safe=False,
         )
-
-
-class LocationDetailEncoder(ModelEncoder):
-    model = Location
-    properties = [
-        "name",
-        "city",
-        "room_count",
-        "created",
-        "updated",
-    ]
-
-    def get_extra_data(self, o):
-        return {"state": o.state.abbreviation}
 
 
 @require_http_methods(["DELETE", "GET", "PUT"])

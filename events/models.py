@@ -66,7 +66,6 @@ class Conference(models.Model):
     updated = models.DateTimeField(auto_now=True)
     max_presentations = models.PositiveSmallIntegerField()
     max_attendees = models.PositiveIntegerField()
-    weather = models.TextField(default="")
 
     location = models.ForeignKey(
         Location,

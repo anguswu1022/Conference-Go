@@ -7,6 +7,7 @@ def get_photo(city, state):
     # Create a dictionary for the headers to use in the request
     headers = {'Authorization': PEXELS_API_KEY}
     params = {
+        "per_page": 1,
         "query": f'{city} {state}',
     }
     # Create the URL for the request with the city and state
@@ -17,7 +18,10 @@ def get_photo(city, state):
     content = json.loads(response.content)
     # Return a dictionary that contains a 'picture_url' key and
     #   one of the URLs for one of the pictures in the response
-    return {'picture_url': content["photos"][0]["src"]["original"]}
+    try:
+        return {'picture_url': content["photos"][0]["src"]["original"]}
+    except KeyError:
+        return {'picture_url': None}
 
 
 def get_weather_data(city, state):
@@ -45,13 +49,15 @@ def get_weather_data(city, state):
         "appid": OPEN_WEATHER_API_KEY
     }
     # Make the request
-    response = requests.get(url, params=params)
+    response = requests.get(url, headers=headers, params=params)
     # Parse the JSON response
     content = json.loads(response.content)
+    temperature = content["main"]["temp"]
+    fahrenheit = 9 / 5 * (temperature - 273) + 32
     # Get the main tempeature and the weather's description and put
     #   them in a dictionary
     data = {
-        "temperature": content["main"]["temp"],
+        "temp": round(fahrenheit, 2),
         "description": content["weather"][0]["description"],
     }
     # Return the dictionary

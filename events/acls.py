@@ -46,18 +46,17 @@ def get_weather_data(city, state):
     params = {
         "lat": latitude,
         "lon": longitude,
+        "units": "imperial",
         "appid": OPEN_WEATHER_API_KEY
     }
     # Make the request
     response = requests.get(url, headers=headers, params=params)
     # Parse the JSON response
     content = json.loads(response.content)
-    temperature = content["main"]["temp"]
-    fahrenheit = 9 / 5 * (temperature - 273) + 32
     # Get the main tempeature and the weather's description and put
     #   them in a dictionary
     data = {
-        "temp": round(fahrenheit, 2),
+        "temp": content["main"]["temp"],
         "description": content["weather"][0]["description"],
     }
     # Return the dictionary

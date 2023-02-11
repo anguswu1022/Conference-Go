@@ -25,7 +25,6 @@ def get_photo(city, state):
 
 
 def get_weather_data(city, state):
-    headers = {"Authorization": OPEN_WEATHER_API_KEY}
     # Create the URL for the geocoding API with the city and state
     url = "http://api.openweathermap.org/geo/1.0/direct"
     params = {
@@ -33,7 +32,7 @@ def get_weather_data(city, state):
         "appid": OPEN_WEATHER_API_KEY,
     }
     # Make the request
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, params=params)
     # Parse the JSOn response
     content = json.loads(response.content)
     # Get the latitude and longitude from the response
@@ -50,14 +49,16 @@ def get_weather_data(city, state):
         "appid": OPEN_WEATHER_API_KEY
     }
     # Make the request
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, params=params)
     # Parse the JSON response
     content = json.loads(response.content)
     # Get the main tempeature and the weather's description and put
     #   them in a dictionary
-    data = {
-        "temp": content["main"]["temp"],
-        "description": content["weather"][0]["description"],
-    }
+    try:
+        return {
+            "temp": str(content["main"]["temp"]) + "°F",
+            "description": content["weather"][0]["description"],
+        }
     # Return the dictionary
-    return data
+    except KeyError:
+        return None

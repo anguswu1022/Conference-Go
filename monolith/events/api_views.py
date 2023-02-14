@@ -129,8 +129,10 @@ def api_show_conference(request, id):
         # Use the city and state abbreviation of the Conference's Location
         # to call the get_weather_data ACL function and get back a dictionary
         # that contains the weather data
-        weather = get_weather_data(conference.location.city,
-                                   conference.location.state.abbreviation)
+        weather = get_weather_data(
+            conference.location.city,
+            conference.location.state
+        )
         # Include the weather data in the JsonResponse
         return JsonResponse(
             {"conference": conference, "weather": weather},

@@ -5,6 +5,7 @@ from events.models import Conference
 from events.api_views import ConferenceListEncoder
 from django.views.decorators.http import require_http_methods
 import json
+import pika
 
 
 class PresentationListEncoder(ModelEncoder):
@@ -77,13 +78,12 @@ class PresentationDetailEncoder(ModelEncoder):
         "status",
         "conference",
     ]
-
-    def get_extra_data(self, o):
-        return {"status": o.status.name}
-
     encoders = {
         "conference": ConferenceListEncoder(),
     }
+
+    def get_extra_data(self, o):
+        return {"status": o.status.name}
 
 
 @require_http_methods(["DELETE", "GET", "PUT"])
@@ -150,3 +150,52 @@ def api_show_presentation(request, id):
             encoder=PresentationDetailEncoder,
             safe=False
         )
+
+
+def send_message(name, body):
+    parameters = pika.ConnectionParameters(host="rabbitmq")
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(queue=name)
+    channel.basic_publish(
+        exchange="",
+        routing_key=name,
+        body=json.dumps(body),
+    )
+    connection.close()
+
+
+@require_http_methods(["PUT"])
+def api_approve_presentation(request, pk):
+    presentation = Presentation.objects.get(id=pk)
+    presentation.approve()
+    body = {
+        "presenter_name": presentation.presenter_name,
+        "presenter_email": presentation.presenter_email,
+        "title": presentation.title,
+    }
+    send_message("presentation_approvals", body)
+
+    return JsonResponse(
+        presentation,
+        encoder=PresentationDetailEncoder,
+        safe=False,
+    )
+
+
+@require_http_methods(["PUT"])
+def api_reject_presentation(request, pk):
+    presentation = Presentation.objects.get(id=pk)
+    presentation.reject()
+    body = {
+        "presenter_name": presentation.presenter_name,
+        "presenter_email": presentation.presenter_email,
+        "title": presentation.title,
+    }
+    send_message("presentation_rejections", body)
+
+    return JsonResponse(
+        presentation,
+        encoder=PresentationDetailEncoder,
+        safe=False,
+    )

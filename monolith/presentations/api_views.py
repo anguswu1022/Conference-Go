@@ -152,7 +152,7 @@ def api_show_presentation(request, id):
         )
 
 
-def send_message(name, body):
+def message(name, body):
     parameters = pika.ConnectionParameters(host="rabbitmq")
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
@@ -174,7 +174,7 @@ def api_approve_presentation(request, pk):
         "presenter_email": presentation.presenter_email,
         "title": presentation.title,
     }
-    send_message("presentation_approvals", body)
+    message("presentation_approvals", body)
 
     return JsonResponse(
         presentation,
@@ -192,7 +192,7 @@ def api_reject_presentation(request, pk):
         "presenter_email": presentation.presenter_email,
         "title": presentation.title,
     }
-    send_message("presentation_rejections", body)
+    message("presentation_rejections", body)
 
     return JsonResponse(
         presentation,

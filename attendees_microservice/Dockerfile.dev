@@ -1,4 +1,4 @@
-# Use teh python:3 base image
+# Use the python:3 base image
 FROM python:3
 
 # Install CRON

@@ -36,11 +36,14 @@ def update_accountvo(ch, method, properties, body):
 #       Use the update_or_create method of the AccountVO.objects QuerySet
 #           to update or create the AccountVO object
         AccountVO.objects.update_or_create(
-            first_name=first_name,
-            last_name=last_name,
             email=email,
-            is_active=is_active,
-            updated=updated,
+            defaults={
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "is_active": is_active,
+                "updated": updated,
+            },
         )
 #   otherwise:
     else:
